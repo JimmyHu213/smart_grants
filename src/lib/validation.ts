@@ -165,6 +165,24 @@ export const deleteDocumentSchema = z.object({
 
 export { ALLOWED_MIME_TYPES, MAX_FILE_SIZE };
 
+// ─── Eligibility Result Schema ───────────────────────
+
+export const eligibilitySchema = z.object({
+  overallScore: z.number().min(0).max(100),
+  criteria: z.array(
+    z.object({
+      name: z.string(),
+      status: z.enum(["qualified", "partial", "not_qualified"]),
+      explanation: z.string(),
+    })
+  ),
+  gaps: z.array(z.string()),
+  recommendations: z.array(z.string()),
+  summary: z.string(),
+});
+
+export type EligibilityResult = z.infer<typeof eligibilitySchema>;
+
 // ─── ID Schema ────────────────────────────────────────
 
 export const idSchema = z.string().min(1, "ID is required");

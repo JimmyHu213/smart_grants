@@ -47,7 +47,7 @@ import { getAllowedNextStatuses } from "@/lib/validation";
 import { AssignGrantDialog } from "./assign-grant-dialog";
 import { DocumentManager } from "@/components/document-manager";
 import { EligibilityPanel } from "@/components/eligibility-panel";
-import type { EligibilityResult } from "@/lib/actions/eligibility";
+import type { EligibilityResult } from "@/lib/validation";
 import type { ApplicationStatus } from "@/generated/prisma/browser";
 
 // ─── Types ─────────────────────────────────────────────

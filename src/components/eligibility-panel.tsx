@@ -17,7 +17,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { runEligibilityAssessment } from "@/lib/actions/eligibility";
-import type { EligibilityResult } from "@/lib/actions/eligibility";
+import type { EligibilityResult } from "@/lib/validation";
 
 // ─── Types ─────────────────────────────────────────────
 

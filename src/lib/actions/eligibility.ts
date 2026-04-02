@@ -3,31 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
-import { idSchema } from "@/lib/validation";
-import { z } from "zod";
+import { idSchema, eligibilitySchema } from "@/lib/validation";
+import type { EligibilityResult } from "@/lib/validation";
 
 export type ActionResult = {
   success: boolean;
   error?: string;
 };
-
-// ─── Eligibility Result Schema ───────────────────────
-
-export const eligibilitySchema = z.object({
-  overallScore: z.number().min(0).max(100),
-  criteria: z.array(
-    z.object({
-      name: z.string(),
-      status: z.enum(["qualified", "partial", "not_qualified"]),
-      explanation: z.string(),
-    })
-  ),
-  gaps: z.array(z.string()),
-  recommendations: z.array(z.string()),
-  summary: z.string(),
-});
-
-export type EligibilityResult = z.infer<typeof eligibilitySchema>;
 
 // ─── Run AI Eligibility Assessment ───────────────────
 
