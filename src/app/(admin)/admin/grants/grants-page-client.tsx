@@ -278,17 +278,17 @@ export function GrantsPageClient({
       </div>
 
       {/* Table */}
-      <div className="rounded-md border">
+      <div className="overflow-x-auto rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[300px]">Grant</TableHead>
+              <TableHead className="min-w-[200px]">Grant</TableHead>
               <TableHead>Jurisdiction</TableHead>
-              <TableHead>Administering Body</TableHead>
+              <TableHead className="hidden lg:table-cell">Administering Body</TableHead>
               <TableHead>Amount</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Rating</TableHead>
-              <TableHead>Deadline</TableHead>
+              <TableHead className="hidden md:table-cell">Rating</TableHead>
+              <TableHead className="hidden md:table-cell">Deadline</TableHead>
               <TableHead className="w-[50px]"><span className="sr-only">Actions</span></TableHead>
             </TableRow>
           </TableHeader>
@@ -333,7 +333,7 @@ export function GrantsPageClient({
                   <TableCell>
                     <Badge variant="outline">{grant.jurisdiction}</Badge>
                   </TableCell>
-                  <TableCell className="max-w-[200px] truncate text-sm">
+                  <TableCell className="hidden max-w-[200px] truncate text-sm lg:table-cell">
                     {grant.administeringBody}
                   </TableCell>
                   <TableCell className="text-sm">{grant.amount}</TableCell>
@@ -342,10 +342,10 @@ export function GrantsPageClient({
                       {grant.status}
                     </Badge>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden md:table-cell">
                     <RatingStars rating={grant.relevanceRating} />
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
+                  <TableCell className="hidden text-sm text-muted-foreground md:table-cell">
                     {grant.deadline ?? "—"}
                   </TableCell>
                   <TableCell>

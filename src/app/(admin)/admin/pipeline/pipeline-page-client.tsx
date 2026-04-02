@@ -278,7 +278,7 @@ export function PipelinePageClient({
       </div>
 
       {/* Status Summary Cards */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
+      <div className="grid grid-cols-4 gap-2 sm:grid-cols-4 lg:grid-cols-8">
         {Object.entries(STATUS_LABELS).map(([status, label]) => (
           <Card
             key={status}
@@ -373,18 +373,18 @@ export function PipelinePageClient({
       </div>
 
       {/* Applications Table */}
-      <div className="rounded-md border">
+      <div className="overflow-x-auto rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[250px]">Grant</TableHead>
+              <TableHead className="min-w-[200px]">Grant</TableHead>
               <TableHead>Company</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Deadline</TableHead>
-              <TableHead>Documents</TableHead>
-              <TableHead>AI</TableHead>
-              <TableHead>Notes</TableHead>
-              <TableHead className="w-[180px]">Change Status</TableHead>
+              <TableHead className="hidden md:table-cell">Deadline</TableHead>
+              <TableHead>Docs</TableHead>
+              <TableHead className="hidden sm:table-cell">AI</TableHead>
+              <TableHead className="hidden sm:table-cell">Notes</TableHead>
+              <TableHead className="min-w-[160px]">Change Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -425,7 +425,7 @@ export function PipelinePageClient({
                       {app.company.name}
                     </TableCell>
                     <TableCell>{statusBadge(app.status)}</TableCell>
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                       {app.grant.deadline ? (
                         <span className="flex items-center gap-1.5 text-sm">
                           <Clock className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
@@ -446,10 +446,10 @@ export function PipelinePageClient({
                         aria-label={`Manage documents for ${app.grant.name}`}
                       >
                         <FolderOpen className="h-3.5 w-3.5" aria-hidden="true" />
-                        {docsUploaded} / {checklistTotal}
+                        {docsUploaded}/{checklistTotal}
                       </Button>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden sm:table-cell">
                       <Button
                         variant="ghost"
                         size="sm"
@@ -461,7 +461,7 @@ export function PipelinePageClient({
                         {app.eligibilityResult ? "View" : "Assess"}
                       </Button>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden sm:table-cell">
                       <Button
                         variant="ghost"
                         size="sm"
