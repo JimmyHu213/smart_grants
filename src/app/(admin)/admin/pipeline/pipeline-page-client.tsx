@@ -37,6 +37,7 @@ import {
   Loader2,
   StickyNote,
   FolderOpen,
+  Brain,
 } from "lucide-react";
 import {
   updateApplicationStatus,
@@ -45,6 +46,8 @@ import {
 import { getAllowedNextStatuses } from "@/lib/validation";
 import { AssignGrantDialog } from "./assign-grant-dialog";
 import { DocumentManager } from "@/components/document-manager";
+import { EligibilityPanel } from "@/components/eligibility-panel";
+import type { EligibilityResult } from "@/lib/actions/eligibility";
 import type { ApplicationStatus } from "@/generated/prisma/browser";
 
 // ─── Types ─────────────────────────────────────────────
@@ -77,6 +80,7 @@ export type ApplicationWithRelations = {
   id: string;
   status: ApplicationStatus;
   notes: string | null;
+  eligibilityResult: Record<string, unknown> | null;
   createdAt: string;
   updatedAt: string;
   company: {
@@ -173,6 +177,8 @@ export function PipelinePageClient({
   const [notesValue, setNotesValue] = useState("");
   const [savingNotes, setSavingNotes] = useState(false);
   const [docsTarget, setDocsTarget] =
+    useState<ApplicationWithRelations | null>(null);
+  const [eligibilityTarget, setEligibilityTarget] =
     useState<ApplicationWithRelations | null>(null);
 
   // Status counts for summary
@@ -328,6 +334,7 @@ export function PipelinePageClient({
               <TableHead>Status</TableHead>
               <TableHead>Deadline</TableHead>
               <TableHead>Documents</TableHead>
+              <TableHead>AI</TableHead>
               <TableHead>Notes</TableHead>
               <TableHead className="w-[180px]">Change Status</TableHead>
             </TableRow>
@@ -336,7 +343,7 @@ export function PipelinePageClient({
             {applications.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={7}
+                  colSpan={8}
                   className="h-24 text-center text-muted-foreground"
                 >
                   No applications found. Assign a grant to a company to get
@@ -387,6 +394,18 @@ export function PipelinePageClient({
                       >
                         <FolderOpen className="h-3.5 w-3.5" aria-hidden="true" />
                         {docsUploaded} / {checklistTotal}
+                      </Button>
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={`h-7 gap-1.5 text-xs ${app.eligibilityResult ? "text-primary" : ""}`}
+                        onClick={() => setEligibilityTarget(app)}
+                        aria-label={`AI eligibility for ${app.grant.name}`}
+                      >
+                        <Brain className="h-3.5 w-3.5" aria-hidden="true" />
+                        {app.eligibilityResult ? "View" : "Assess"}
                       </Button>
                     </TableCell>
                     <TableCell>
@@ -517,6 +536,30 @@ export function PipelinePageClient({
                 canUpload={true}
               />
             </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* AI Eligibility Dialog */}
+      <Dialog
+        open={!!eligibilityTarget}
+        onOpenChange={(open) => {
+          if (!open) setEligibilityTarget(null);
+        }}
+      >
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>AI Eligibility Assessment</DialogTitle>
+          </DialogHeader>
+          {eligibilityTarget && (
+            <EligibilityPanel
+              applicationId={eligibilityTarget.id}
+              grantName={eligibilityTarget.grant.name}
+              companyName={eligibilityTarget.company.name}
+              existingResult={
+                eligibilityTarget.eligibilityResult as EligibilityResult | null
+              }
+            />
           )}
         </DialogContent>
       </Dialog>

@@ -40,7 +40,7 @@ export default async function AdminPipelinePage({
     where.companyId = companyParam;
   }
 
-  // Fetch applications with relations (including documents and checklist items)
+  // Fetch applications with all relations needed for pipeline + documents + eligibility
   const applications = await prisma.grantApplication.findMany({
     where,
     include: {
@@ -92,11 +92,12 @@ export default async function AdminPipelinePage({
     }),
   ]);
 
-  // Serialise dates
+  // Serialise dates and eligibilityResult for client
   const serialisedApplications = applications.map((app) => ({
     ...app,
     createdAt: app.createdAt.toISOString(),
     updatedAt: app.updatedAt.toISOString(),
+    eligibilityResult: app.eligibilityResult as Record<string, unknown> | null,
     documents: app.documents.map((doc) => ({
       ...doc,
       createdAt: doc.createdAt.toISOString(),
