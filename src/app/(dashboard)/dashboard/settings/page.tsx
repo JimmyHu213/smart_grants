@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PasswordChangeForm } from "./password-change-form";
 
 export default function SettingsPage() {
   return (
@@ -10,16 +10,7 @@ export default function SettingsPage() {
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Password Change</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Password change functionality will be available in a future update.
-          </p>
-        </CardContent>
-      </Card>
+      <PasswordChangeForm />
     </div>
   );
 }
