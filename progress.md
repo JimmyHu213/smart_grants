@@ -139,3 +139,112 @@ Each grant includes: name, jurisdiction, administering body, amount, status, dea
 - Status transition validation is centralised in `validation.ts`
 - User dashboard is scoped by `companyId` from the session — no RLS needed
 - Supabase admin client created separately for user management (service role key)
+
+---
+
+# Sprint 3 Progress: Documents, AI Eligibility, Admin Dashboard, Password Change
+
+## Status: Complete
+
+## What Was Built
+
+### Feature 7: Document Management
+- Admin and user can upload files (PDF, DOCX, PNG, JPG) up to 10 MB against a grant application
+- Files uploaded directly to Supabase Storage via signed upload URLs
+- File metadata (name, size, type, uploader, linked checklist item) stored in the `documents` table
+- Documents listed with: filename, size, upload date, uploader name, linked checklist item, download link
+- Download via signed URLs (1-hour expiry) generated server-side
+- Admin can delete documents (with AlertDialog confirmation) — deletes from both Storage and database
+- Documents can be linked to specific checklist items via a dropdown
+- Upload progress feedback ("Preparing upload...", "Uploading file...", "Saving record...")
+- Client-side validation: file type + size checks before upload
+- Document manager integrated into:
+  - Admin pipeline page (dialog per application row, with "X/Y" documents button)
+  - User dashboard (dialog per application card)
+
+### Feature 8: AI Eligibility Matching
+- Admin can trigger AI eligibility assessment from the pipeline page (per application)
+- Uses Vercel AI SDK v6: `generateText` with `Output.object()` and Zod schema
+- Direct `@ai-sdk/anthropic` provider for local dev (uses `ANTHROPIC_API_KEY`)
+- Structured result: overall fit score (0-100), per-criterion assessment (qualified/partial/not_qualified), gaps, recommendations, summary
+- Result persists as JSON on the `GrantApplication.eligibilityResult` field
+- EligibilityPanel component renders:
+  - Score gauge with colour-coded indicator (Strong/Moderate/Weak/Poor Fit)
+  - Per-criterion cards with status badges and explanations
+  - Gaps list with amber indicators
+  - Recommendations list with teal indicators
+- "Re-run Assessment" button to refresh results
+- Graceful handling when API key not configured (descriptive error message)
+- Pipeline table has AI column with "Assess"/"View" button (highlighted when result exists)
+
+### Feature 9: Admin Dashboard
+- `/admin/dashboard` page as the admin landing page
+- Summary stat cards: Total Grants, Companies, Applications, Needs Action
+- Each card links to the relevant admin page (grants, companies, pipeline with filters)
+- Applications-by-status breakdown with clickable cells linking to pipeline filters
+- Colour-coded status counts (8 statuses)
+- Two-column layout:
+  - Upcoming Deadlines: active applications with grant deadlines, linking to filtered pipeline
+  - Recent Activity: last 8 updated applications with status badges and relative timestamps
+- Admin nav updated: Dashboard added as first item
+- Root `/` redirect changed from `/admin/grants` to `/admin/dashboard` for admins
+
+### Feature 10: Password Change
+- `/dashboard/settings` page with password change form
+- Server action validates via Zod: current password required, new password min 8 chars, confirmation must match
+- Current password verified by attempting `signInWithPassword` via Supabase Auth
+- Password updated via `updateUser` Supabase Auth method
+- Client-side validation with field-level error display
+- Toast feedback on success/error
+- Form resets on successful change
+
+## New Dependencies
+- `ai` (v6) — Vercel AI SDK for structured output generation
+- `@ai-sdk/anthropic` — Direct Anthropic provider for Claude API calls
+
+## Key Files Added/Modified
+- `src/lib/actions/documents.ts` — Document CRUD, signed URL generation
+- `src/lib/actions/eligibility.ts` — AI eligibility assessment via Claude
+- `src/lib/actions/password.ts` — Password change server action
+- `src/lib/validation.ts` — Added document schemas (upload, delete, file types, size limits)
+- `src/lib/env.ts` — Added optional ANTHROPIC_API_KEY
+- `src/components/document-manager.tsx` — Upload/list/download/delete documents
+- `src/components/eligibility-panel.tsx` — AI assessment results with score gauge
+- `src/app/(admin)/admin/dashboard/page.tsx` — Admin dashboard
+- `src/app/(admin)/admin/pipeline/page.tsx` — Updated to fetch documents, checklist items, eligibility
+- `src/app/(admin)/admin/pipeline/pipeline-page-client.tsx` — Added documents + AI dialogs
+- `src/app/(dashboard)/dashboard/page.tsx` — Updated to pass documents to client cards
+- `src/app/(dashboard)/dashboard/dashboard-application-card.tsx` — User app card with documents dialog
+- `src/app/(dashboard)/dashboard/settings/page.tsx` — Password change form
+- `src/app/(dashboard)/dashboard/settings/password-change-form.tsx` — Client-side password form
+- `src/components/admin-shell.tsx` — Added Dashboard nav item
+- `.env.example` — Added ANTHROPIC_API_KEY
+- `sprint-3-contract.md` — Sprint 3 acceptance criteria
+
+## Supabase Storage Setup (Manual Step)
+To enable document uploads, create a storage bucket in Supabase:
+
+1. Go to Supabase Dashboard > Storage
+2. Create a new bucket called `documents`
+3. Set it as **private** (not public)
+4. Set file size limit to 10 MB
+5. Allowed MIME types: `application/pdf`, `application/vnd.openxmlformats-officedocument.wordprocessingml.document`, `image/png`, `image/jpeg`
+
+Alternatively via SQL:
+```sql
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'documents',
+  'documents',
+  false,
+  10485760,
+  ARRAY['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'image/png', 'image/jpeg']
+);
+```
+
+## Architecture Notes
+- Document upload uses signed upload URLs: server generates URL → client uploads directly → server saves metadata
+- AI SDK v6 pattern: `generateText` + `Output.object()` with Zod schema (not deprecated `generateObject`)
+- AI eligibility uses dynamic imports (`await import("ai")`) to avoid bundling issues when key not configured
+- All new server actions follow the established pattern: Zod validation + auth check + try/catch + revalidatePath
+- Password change verifies current password via signInWithPassword before updateUser
