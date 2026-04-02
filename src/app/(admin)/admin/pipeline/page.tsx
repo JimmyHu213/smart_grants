@@ -40,7 +40,7 @@ export default async function AdminPipelinePage({
     where.companyId = companyParam;
   }
 
-  // Fetch applications with relations
+  // Fetch applications with relations (including documents and checklist items)
   const applications = await prisma.grantApplication.findMany({
     where,
     include: {
@@ -55,7 +55,22 @@ export default async function AdminPipelinePage({
           deadline: true,
           status: true,
           _count: { select: { checklistItems: true } },
+          checklistItems: {
+            orderBy: { sortOrder: "asc" },
+            select: { id: true, label: true, sortOrder: true },
+          },
         },
+      },
+      documents: {
+        include: {
+          uploadedBy: {
+            select: { fullName: true, email: true },
+          },
+          checklistItem: {
+            select: { label: true },
+          },
+        },
+        orderBy: { createdAt: "desc" },
       },
       _count: {
         select: { documents: true },
@@ -82,6 +97,10 @@ export default async function AdminPipelinePage({
     ...app,
     createdAt: app.createdAt.toISOString(),
     updatedAt: app.updatedAt.toISOString(),
+    documents: app.documents.map((doc) => ({
+      ...doc,
+      createdAt: doc.createdAt.toISOString(),
+    })),
   }));
 
   return (

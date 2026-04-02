@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   AlertCircle,
 } from "lucide-react";
+import { DashboardApplicationCard } from "./dashboard-application-card";
 
 // ─── Status Display ───────────────────────────────────
 
@@ -81,8 +82,23 @@ export default async function DashboardPage() {
             orderBy: { sortOrder: "asc" },
             select: { label: true, sortOrder: true },
           },
+          checklistItems: {
+            orderBy: { sortOrder: "asc" },
+            select: { id: true, label: true, sortOrder: true },
+          },
           _count: { select: { checklistItems: true } },
         },
+      },
+      documents: {
+        include: {
+          uploadedBy: {
+            select: { fullName: true, email: true },
+          },
+          checklistItem: {
+            select: { label: true },
+          },
+        },
+        orderBy: { createdAt: "desc" },
       },
       _count: {
         select: { documents: true },
@@ -123,6 +139,26 @@ export default async function DashboardPage() {
     }
     return null;
   }
+
+  // Serialise for client components
+  const serialisedApplications = applications.map((app) => ({
+    id: app.id,
+    status: app.status,
+    grant: {
+      name: app.grant.name,
+      jurisdiction: app.grant.jurisdiction,
+      deadline: app.grant.deadline,
+      amount: app.grant.amount,
+      checklistItems: app.grant.checklistItems,
+      checklistCount: app.grant._count.checklistItems,
+    },
+    nextStep: getNextStep(app.status, app.grant.processSteps),
+    docsUploaded: app._count.documents,
+    documents: app.documents.map((doc) => ({
+      ...doc,
+      createdAt: doc.createdAt.toISOString(),
+    })),
+  }));
 
   return (
     <div className="space-y-6">
@@ -187,99 +223,18 @@ export default async function DashboardPage() {
         <div className="space-y-4">
           <h3 className="text-lg font-semibold">Your Grant Applications</h3>
           <div className="grid gap-4">
-            {applications.map((app) => {
+            {serialisedApplications.map((app) => {
               const statusConfig = STATUS_CONFIG[app.status] ?? {
                 label: app.status,
                 variant: "outline" as const,
               };
-              const checklistTotal = app.grant._count.checklistItems;
-              const docsUploaded = app._count.documents;
-              const nextStep = getNextStep(
-                app.status,
-                app.grant.processSteps
-              );
 
               return (
-                <Card key={app.id}>
-                  <CardContent className="p-5">
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                      {/* Left: Grant info */}
-                      <div className="min-w-0 flex-1 space-y-2">
-                        <div className="flex items-start gap-3">
-                          <div className="min-w-0 flex-1">
-                            <h4 className="font-semibold leading-snug">
-                              {app.grant.name}
-                            </h4>
-                            <div className="mt-1 flex flex-wrap items-center gap-2">
-                              <Badge variant="outline" className="text-xs">
-                                {app.grant.jurisdiction}
-                              </Badge>
-                              <Badge variant={statusConfig.variant}>
-                                {statusConfig.label}
-                              </Badge>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Amount */}
-                        {app.grant.amount && (
-                          <p className="text-sm text-muted-foreground">
-                            Amount: {app.grant.amount}
-                          </p>
-                        )}
-
-                        {/* Next step */}
-                        {nextStep && (
-                          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                            <ArrowRight className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                            <span>
-                              Next: <span className="text-foreground">{nextStep}</span>
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Right: Deadline + Docs */}
-                      <div className="flex shrink-0 flex-col gap-2 text-sm sm:items-end">
-                        {/* Deadline */}
-                        {app.grant.deadline && (
-                          <div className="flex items-center gap-1.5 text-muted-foreground">
-                            <Clock className="h-3.5 w-3.5" aria-hidden="true" />
-                            <span>{app.grant.deadline}</span>
-                          </div>
-                        )}
-
-                        {/* Document checklist progress */}
-                        <div className="flex items-center gap-1.5">
-                          <FileCheck className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
-                          <span className="text-muted-foreground">
-                            {docsUploaded} / {checklistTotal} documents
-                          </span>
-                        </div>
-
-                        {/* Progress bar */}
-                        {checklistTotal > 0 && (
-                          <div className="h-1.5 w-24 overflow-hidden rounded-full bg-muted">
-                            <div
-                              className="h-full rounded-full bg-primary transition-all"
-                              style={{
-                                width: `${Math.min(
-                                  100,
-                                  (docsUploaded / checklistTotal) * 100
-                                )}%`,
-                              }}
-                              role="progressbar"
-                              aria-valuenow={docsUploaded}
-                              aria-valuemin={0}
-                              aria-valuemax={checklistTotal}
-                              aria-label={`${docsUploaded} of ${checklistTotal} documents uploaded`}
-                            />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <DashboardApplicationCard
+                  key={app.id}
+                  app={app}
+                  statusConfig={statusConfig}
+                />
               );
             })}
           </div>

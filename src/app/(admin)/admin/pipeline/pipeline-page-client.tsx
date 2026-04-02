@@ -36,6 +36,7 @@ import {
   Clock,
   Loader2,
   StickyNote,
+  FolderOpen,
 } from "lucide-react";
 import {
   updateApplicationStatus,
@@ -43,9 +44,34 @@ import {
 } from "@/lib/actions/applications";
 import { getAllowedNextStatuses } from "@/lib/validation";
 import { AssignGrantDialog } from "./assign-grant-dialog";
+import { DocumentManager } from "@/components/document-manager";
 import type { ApplicationStatus } from "@/generated/prisma/browser";
 
 // ─── Types ─────────────────────────────────────────────
+
+type DocumentRecord = {
+  id: string;
+  fileName: string;
+  fileUrl: string;
+  fileSize: number | null;
+  mimeType: string | null;
+  checklistItemId: string | null;
+  uploadedById: string;
+  createdAt: string;
+  uploadedBy: {
+    fullName: string | null;
+    email: string;
+  };
+  checklistItem: {
+    label: string;
+  } | null;
+};
+
+type ChecklistItem = {
+  id: string;
+  label: string;
+  sortOrder: number;
+};
 
 export type ApplicationWithRelations = {
   id: string;
@@ -64,7 +90,9 @@ export type ApplicationWithRelations = {
     deadline: string | null;
     status: string;
     _count: { checklistItems: number };
+    checklistItems: ChecklistItem[];
   };
+  documents: DocumentRecord[];
   _count: {
     documents: number;
   };
@@ -144,6 +172,8 @@ export function PipelinePageClient({
     useState<ApplicationWithRelations | null>(null);
   const [notesValue, setNotesValue] = useState("");
   const [savingNotes, setSavingNotes] = useState(false);
+  const [docsTarget, setDocsTarget] =
+    useState<ApplicationWithRelations | null>(null);
 
   // Status counts for summary
   const statusCounts = applications.reduce(
@@ -348,10 +378,16 @@ export function PipelinePageClient({
                       )}
                     </TableCell>
                     <TableCell>
-                      <span className="flex items-center gap-1.5 text-sm">
-                        <FileCheck className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 gap-1.5 text-xs"
+                        onClick={() => setDocsTarget(app)}
+                        aria-label={`Manage documents for ${app.grant.name}`}
+                      >
+                        <FolderOpen className="h-3.5 w-3.5" aria-hidden="true" />
                         {docsUploaded} / {checklistTotal}
-                      </span>
+                      </Button>
                     </TableCell>
                     <TableCell>
                       <Button
@@ -452,6 +488,34 @@ export function PipelinePageClient({
                   Save Notes
                 </Button>
               </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Documents Dialog */}
+      <Dialog
+        open={!!docsTarget}
+        onOpenChange={(open) => {
+          if (!open) setDocsTarget(null);
+        }}
+      >
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Documents</DialogTitle>
+          </DialogHeader>
+          {docsTarget && (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                {docsTarget.grant.name} &mdash; {docsTarget.company.name}
+              </p>
+              <DocumentManager
+                applicationId={docsTarget.id}
+                checklistItems={docsTarget.grant.checklistItems}
+                documents={docsTarget.documents}
+                isAdmin={true}
+                canUpload={true}
+              />
             </div>
           )}
         </DialogContent>

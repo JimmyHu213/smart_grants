@@ -13,6 +13,9 @@ const envSchema = z.object({
   // Database
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
 
+  // AI
+  ANTHROPIC_API_KEY: z.string().min(1, "ANTHROPIC_API_KEY is required").optional(),
+
   // Node
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
 });

@@ -136,6 +136,35 @@ export function getAllowedNextStatuses(currentStatus: string): string[] {
   return allowed ? [currentStatus, ...Array.from(allowed)] : [currentStatus];
 }
 
+// ─── Document Schemas ────────────────────────────────
+
+const ALLOWED_MIME_TYPES = [
+  "application/pdf",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "image/png",
+  "image/jpeg",
+] as const;
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+
+export const documentUploadSchema = z.object({
+  applicationId: z.string().min(1, "Application ID is required"),
+  checklistItemId: z.string().optional().or(z.literal("")),
+  fileName: z.string().min(1, "File name is required").max(500),
+  fileUrl: z.string().min(1, "File URL is required"),
+  fileSize: z.number().int().min(1).max(MAX_FILE_SIZE, "File must be under 10 MB"),
+  mimeType: z.string().refine(
+    (val) => (ALLOWED_MIME_TYPES as readonly string[]).includes(val),
+    { message: "File type not allowed. Accepted: PDF, DOCX, PNG, JPG" }
+  ),
+});
+
+export const deleteDocumentSchema = z.object({
+  documentId: z.string().min(1, "Document ID is required"),
+});
+
+export { ALLOWED_MIME_TYPES, MAX_FILE_SIZE };
+
 // ─── ID Schema ────────────────────────────────────────
 
 export const idSchema = z.string().min(1, "ID is required");
