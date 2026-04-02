@@ -183,6 +183,27 @@ export const eligibilitySchema = z.object({
 
 export type EligibilityResult = z.infer<typeof eligibilitySchema>;
 
+// ─── User Management Schemas ─────────────────────────
+
+const ROLES = ["ADMIN", "USER"] as const;
+
+export const updateUserSchema = z.object({
+  fullName: z.string().max(200).optional().or(z.literal("")),
+  phone: z.string().max(50).optional().or(z.literal("")),
+  role: z.enum(ROLES, { message: "Invalid role" }),
+  companyId: z.string().min(1, "Company is required"),
+});
+
+export const resetPasswordSchema = z
+  .object({
+    newPassword: z.string().min(8, "Password must be at least 8 characters"),
+    confirmPassword: z.string().min(1, "Please confirm the new password"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+
 // ─── ID Schema ────────────────────────────────────────
 
 export const idSchema = z.string().min(1, "ID is required");
