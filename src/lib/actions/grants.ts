@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
+import { grantFormSchema, idSchema } from "@/lib/validation";
 import type { Jurisdiction, GrantStatus } from "@/generated/prisma/client";
 
 // ─── Types ─────────────────────────────────────────────
@@ -45,26 +46,34 @@ export async function createGrant(data: GrantFormData): Promise<ActionResult> {
   try {
     await requireAdmin();
 
+    const parsed = grantFormSchema.safeParse(data);
+    if (!parsed.success) {
+      const firstError = parsed.error.issues[0]?.message ?? "Invalid input";
+      return { success: false, error: firstError };
+    }
+
+    const validated = parsed.data;
+
     await prisma.grant.create({
       data: {
-        name: data.name,
-        jurisdiction: data.jurisdiction,
-        administeringBody: data.administeringBody,
-        amount: data.amount,
-        status: data.status,
-        deadline: data.deadline || null,
-        externalLink: data.externalLink || null,
-        relevanceRating: data.relevanceRating || null,
-        description: data.description,
-        eligibilityCriteria: data.eligibilityCriteria || null,
+        name: validated.name,
+        jurisdiction: validated.jurisdiction,
+        administeringBody: validated.administeringBody,
+        amount: validated.amount,
+        status: validated.status,
+        deadline: validated.deadline || null,
+        externalLink: validated.externalLink || null,
+        relevanceRating: validated.relevanceRating || null,
+        description: validated.description,
+        eligibilityCriteria: validated.eligibilityCriteria || null,
         checklistItems: {
-          create: data.checklistItems.map((item) => ({
+          create: validated.checklistItems.map((item) => ({
             label: item.label,
             sortOrder: item.sortOrder,
           })),
         },
         processSteps: {
-          create: data.processSteps.map((step) => ({
+          create: validated.processSteps.map((step) => ({
             label: step.label,
             sortOrder: step.sortOrder,
           })),
@@ -90,22 +99,35 @@ export async function updateGrant(
   try {
     await requireAdmin();
 
+    const idResult = idSchema.safeParse(id);
+    if (!idResult.success) {
+      return { success: false, error: "Invalid grant ID" };
+    }
+
+    const parsed = grantFormSchema.safeParse(data);
+    if (!parsed.success) {
+      const firstError = parsed.error.issues[0]?.message ?? "Invalid input";
+      return { success: false, error: firstError };
+    }
+
+    const validated = parsed.data;
+
     // Update grant and replace checklist items and process steps
     await prisma.$transaction(async (tx) => {
       // Update the grant itself
       await tx.grant.update({
         where: { id },
         data: {
-          name: data.name,
-          jurisdiction: data.jurisdiction,
-          administeringBody: data.administeringBody,
-          amount: data.amount,
-          status: data.status,
-          deadline: data.deadline || null,
-          externalLink: data.externalLink || null,
-          relevanceRating: data.relevanceRating || null,
-          description: data.description,
-          eligibilityCriteria: data.eligibilityCriteria || null,
+          name: validated.name,
+          jurisdiction: validated.jurisdiction,
+          administeringBody: validated.administeringBody,
+          amount: validated.amount,
+          status: validated.status,
+          deadline: validated.deadline || null,
+          externalLink: validated.externalLink || null,
+          relevanceRating: validated.relevanceRating || null,
+          description: validated.description,
+          eligibilityCriteria: validated.eligibilityCriteria || null,
         },
       });
 
@@ -113,9 +135,9 @@ export async function updateGrant(
       await tx.grantChecklistItem.deleteMany({ where: { grantId: id } });
       await tx.grantProcessStep.deleteMany({ where: { grantId: id } });
 
-      if (data.checklistItems.length > 0) {
+      if (validated.checklistItems.length > 0) {
         await tx.grantChecklistItem.createMany({
-          data: data.checklistItems.map((item) => ({
+          data: validated.checklistItems.map((item) => ({
             grantId: id,
             label: item.label,
             sortOrder: item.sortOrder,
@@ -123,9 +145,9 @@ export async function updateGrant(
         });
       }
 
-      if (data.processSteps.length > 0) {
+      if (validated.processSteps.length > 0) {
         await tx.grantProcessStep.createMany({
-          data: data.processSteps.map((step) => ({
+          data: validated.processSteps.map((step) => ({
             grantId: id,
             label: step.label,
             sortOrder: step.sortOrder,
@@ -148,6 +170,11 @@ export async function updateGrant(
 export async function deleteGrant(id: string): Promise<ActionResult> {
   try {
     await requireAdmin();
+
+    const idResult = idSchema.safeParse(id);
+    if (!idResult.success) {
+      return { success: false, error: "Invalid grant ID" };
+    }
 
     await prisma.grant.delete({ where: { id } });
 

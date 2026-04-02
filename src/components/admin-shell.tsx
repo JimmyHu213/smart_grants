@@ -12,10 +12,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { FileText, LogOut, User } from "lucide-react";
+import { FileText, Building2, GitBranch, LogOut, User } from "lucide-react";
 
 const navItems = [
   { label: "Grants", href: "/admin/grants", icon: FileText },
+  { label: "Companies", href: "/admin/companies", icon: Building2 },
+  { label: "Pipeline", href: "/admin/pipeline", icon: GitBranch },
 ];
 
 export function AdminShell({
@@ -59,9 +61,9 @@ export function AdminShell({
           <div className="ml-auto">
             <DropdownMenu>
               <DropdownMenuTrigger
-                render={<Button variant="ghost" size="sm" className="gap-2" />}
+                render={<Button variant="ghost" size="sm" className="gap-2" aria-label={`Account menu for ${user.email}`} />}
               >
-                <User className="h-4 w-4" />
+                <User className="h-4 w-4" aria-hidden="true" />
                 <span className="hidden sm:inline">{user.email}</span>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">

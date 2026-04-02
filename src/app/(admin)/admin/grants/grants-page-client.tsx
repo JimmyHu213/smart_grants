@@ -238,7 +238,7 @@ export function GrantsPageClient({
               <TableHead>Status</TableHead>
               <TableHead>Rating</TableHead>
               <TableHead>Deadline</TableHead>
-              <TableHead className="w-[50px]" />
+              <TableHead className="w-[50px]"><span className="sr-only">Actions</span></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
