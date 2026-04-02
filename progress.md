@@ -248,3 +248,110 @@ VALUES (
 - AI eligibility uses dynamic imports (`await import("ai")`) to avoid bundling issues when key not configured
 - All new server actions follow the established pattern: Zod validation + auth check + try/catch + revalidatePath
 - Password change verifies current password via signInWithPassword before updateUser
+
+---
+
+# Sprint 4 Progress: Detail Views, Search, Polish, Deploy
+
+## Status: Complete
+
+## What Was Built
+
+### Feature 11: Grant Detail View
+- Admin grant detail page at `/admin/grants/[id]` showing full grant information
+- Sections: Description, Eligibility Criteria, Document Checklist (numbered list), Process Steps (visual stepper), Grant Details sidebar (Amount, Jurisdiction, Administering Body, Deadline, Relevance Rating)
+- External link button to original platform
+- Edit grant button opens existing GrantFormDialog (admin only)
+- User-facing version at `/dashboard/grants/[id]` shares the same component with admin controls hidden
+- Grant names in the grants list table and pipeline table are now clickable links to the detail view
+- "View Details" action added to grants table dropdown menu
+- Loading skeleton for grant detail page
+- Back navigation to grants list or dashboard
+
+### Feature 12: Application Detail View
+- Admin application detail at `/admin/pipeline/[id]` showing:
+  - Grant info summary with link to full grant detail
+  - Company profile summary (name, ABN, jurisdiction, industry, ownership, turnover, etc.)
+  - Visual status timeline (StatusStepper component) showing all pipeline stages with completed/current/upcoming states
+  - Document management section (reuses DocumentManager component) with upload/download/delete
+  - AI Eligibility panel (reuses EligibilityPanel component) with run/re-run assessment
+  - Editable notes section with save button
+  - Status change dropdown showing only valid transitions
+- User application detail at `/dashboard/applications/[id]`:
+  - Same layout but read-only for status (no status change dropdown)
+  - Notes are read-only (displayed if present, "No notes" message if empty)
+  - Users CAN upload documents from the detail view
+  - Eligibility results are shown if previously run by admin
+- StatusStepper component renders a visual horizontal stepper with:
+  - Green completed steps with check icons
+  - Highlighted current step with ring indicator
+  - Muted upcoming steps
+  - Special terminal state indicators for REJECTED and CLOSED
+- Dashboard application cards now link to `/dashboard/applications/[id]`
+- Pipeline table grant names now link to `/admin/pipeline/[id]`
+- Loading skeletons for both detail pages
+- revalidatePath updated for detail page routes on status/notes changes
+
+### Feature 13: Search and Filtering
+- Grants list: text search input with 400ms debounce across grant name, description, and administering body
+- Search uses URL search params (`?q=...`) for server-side filtering via Prisma `contains` with `mode: "insensitive"`
+- Pipeline: jurisdiction filter dropdown added alongside existing status and company filters
+- Both pages: "Clear Filters" button appears when any filter is active, resets all filters
+- Result count shown in page header for both grants and pipeline
+
+### Feature 14: Polish, Responsiveness, and Accessibility
+- **Responsive navigation**: Both admin and user shells use a Sheet drawer for mobile navigation (< 640px breakpoint) with hamburger menu trigger. Desktop horizontal nav preserved for larger screens.
+- **Mobile table responsiveness**: All data tables have `overflow-x-auto` containers. Less important columns (Administering Body, Rating, Deadline on grants; Deadline, AI, Notes on pipeline) hidden on smaller breakpoints using `hidden md:table-cell` / `hidden sm:table-cell` / `hidden lg:table-cell`.
+- **Loading states**: Every async page has a `loading.tsx` with Skeleton components matching the page layout shape:
+  - `/admin/grants`, `/admin/pipeline`, `/admin/companies`, `/admin/dashboard`
+  - `/dashboard`, `/dashboard/settings`
+  - `/admin/grants/[id]`, `/admin/pipeline/[id]`
+  - `/dashboard/grants/[id]`, `/dashboard/applications/[id]`
+- **Empty states**: All list views have friendly empty state messages (grants, pipeline, companies, user dashboard applications)
+- **Accessibility**: `role="alert"` on login error, `aria-label` on all filter controls and navigation landmarks, `sr-only` labels on action buttons, keyboard-navigable primary actions via focusable elements
+- **404 page**: Custom not-found page with friendly message and "Go Home" button
+- **No TypeScript errors**: `npx next build` passes cleanly
+
+## Key Files Added/Modified
+- `src/app/(admin)/admin/grants/[id]/page.tsx` — Admin grant detail server component
+- `src/app/(admin)/admin/grants/[id]/grant-detail-client.tsx` — Grant detail client component (shared)
+- `src/app/(admin)/admin/grants/[id]/loading.tsx` — Grant detail loading skeleton
+- `src/app/(dashboard)/dashboard/grants/[id]/page.tsx` — User grant detail page
+- `src/app/(admin)/admin/pipeline/[id]/page.tsx` — Admin application detail server component
+- `src/app/(admin)/admin/pipeline/[id]/application-detail-client.tsx` — Application detail client (shared)
+- `src/app/(admin)/admin/pipeline/[id]/loading.tsx` — Application detail loading skeleton
+- `src/app/(dashboard)/dashboard/applications/[id]/page.tsx` — User application detail page
+- `src/components/status-stepper.tsx` — Visual pipeline stepper component
+- `src/components/admin-shell.tsx` — Updated with mobile Sheet drawer navigation
+- `src/components/dashboard-shell.tsx` — Updated with mobile Sheet drawer navigation
+- `src/app/(admin)/admin/grants/page.tsx` — Added text search support
+- `src/app/(admin)/admin/grants/grants-page-client.tsx` — Search input, clear filters, grant name links
+- `src/app/(admin)/admin/pipeline/page.tsx` — Added jurisdiction filter
+- `src/app/(admin)/admin/pipeline/pipeline-page-client.tsx` — Jurisdiction filter, clear filters, app name links
+- `src/app/(dashboard)/dashboard/dashboard-application-card.tsx` — Links to application detail
+- `src/app/not-found.tsx` — Custom 404 page
+- Loading skeletons for all pages (8 files)
+- `sprint-4-contract.md` — Sprint 4 acceptance criteria
+
+## Deployment Notes
+To deploy to Vercel:
+
+1. Connect the repository to Vercel
+2. Set environment variables in Vercel dashboard:
+   - `DATABASE_URL` — Supabase pooled connection string (port 6543)
+   - `DIRECT_URL` — Supabase direct connection string (port 5432)
+   - `NEXT_PUBLIC_SUPABASE_URL` — Supabase project URL
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Supabase anon key
+   - `SUPABASE_SERVICE_ROLE_KEY` — Supabase service role key (for admin user creation)
+   - `ANTHROPIC_API_KEY` — (optional) Claude API key for AI eligibility
+3. Build command: `npx prisma generate && next build`
+4. Output directory: `.next`
+5. Framework: Next.js (auto-detected)
+
+## Architecture Notes
+- Grant detail and application detail pages share components between admin and user roles via `isAdmin` prop
+- StatusStepper shows the "happy path" pipeline (NOT_STARTED through APPROVED) with special handling for REJECTED/CLOSED terminal states
+- Text search uses Prisma `contains` with `mode: "insensitive"` for case-insensitive search
+- All new routes follow the established pattern: async Server Component fetches data, serialises dates, passes to Client Component
+- Mobile navigation uses shadcn Sheet component (Base UI Dialog underneath) with `side="left"`
+- Loading skeletons use the Skeleton component to match each page's layout shape
