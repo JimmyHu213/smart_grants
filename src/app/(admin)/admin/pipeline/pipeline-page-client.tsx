@@ -38,7 +38,9 @@ import {
   StickyNote,
   FolderOpen,
   Brain,
+  Eye,
 } from "lucide-react";
+import Link from "next/link";
 import {
   updateApplicationStatus,
   updateApplicationNotes,
@@ -360,12 +362,17 @@ export function PipelinePageClient({
                   <TableRow key={app.id}>
                     <TableCell>
                       <div className="space-y-0.5">
-                        <p className="font-medium leading-snug">
+                        <Link
+                          href={`/admin/pipeline/${app.id}`}
+                          className="font-medium leading-snug hover:text-primary hover:underline transition-colors"
+                        >
                           {app.grant.name}
-                        </p>
-                        <Badge variant="outline" className="text-xs">
-                          {app.grant.jurisdiction}
-                        </Badge>
+                        </Link>
+                        <div className="flex items-center gap-1.5">
+                          <Badge variant="outline" className="text-xs">
+                            {app.grant.jurisdiction}
+                          </Badge>
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell className="text-sm">

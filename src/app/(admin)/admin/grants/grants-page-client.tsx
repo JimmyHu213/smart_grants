@@ -36,7 +36,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, MoreHorizontal, Pencil, Trash2, ExternalLink, Star } from "lucide-react";
+import { Plus, MoreHorizontal, Pencil, Trash2, ExternalLink, Star, Eye } from "lucide-react";
+import Link from "next/link";
 import { deleteGrant } from "@/lib/actions/grants";
 import { GrantFormDialog } from "./grant-form-dialog";
 import type { Jurisdiction, GrantStatus } from "@/generated/prisma/browser";
@@ -256,7 +257,12 @@ export function GrantsPageClient({
                 <TableRow key={grant.id}>
                   <TableCell>
                     <div className="space-y-1">
-                      <p className="font-medium leading-snug">{grant.name}</p>
+                      <Link
+                        href={`/admin/grants/${grant.id}`}
+                        className="font-medium leading-snug hover:text-primary hover:underline transition-colors"
+                      >
+                        {grant.name}
+                      </Link>
                       {grant.externalLink && (
                         <a
                           href={
@@ -301,6 +307,12 @@ export function GrantsPageClient({
                         <span className="sr-only">Actions</span>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() => router.push(`/admin/grants/${grant.id}`)}
+                        >
+                          <Eye className="mr-2 h-4 w-4" />
+                          View Details
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setEditGrant(grant)}>
                           <Pencil className="mr-2 h-4 w-4" />
                           Edit
