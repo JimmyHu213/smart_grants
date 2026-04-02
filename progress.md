@@ -62,6 +62,80 @@ Each grant includes: name, jurisdiction, administering body, amount, status, dea
 
 ## Known Limitations
 - No automated test suite yet (Sprint 1 contract item pending)
-- User dashboard is a placeholder (Sprint 2 work)
 - Profile creation not automated on Supabase Auth signup (manual insert required)
 - No password change functionality yet (Sprint 3)
+
+---
+
+# Sprint 2 Progress: Pipeline — Companies, Applications, User Dashboard
+
+## Status: Complete
+
+## What Was Built
+
+### Feature 4: User/Company Management (Admin)
+- Admin page at `/admin/companies` showing all companies in a data table
+- **Create company** dialog with all profile fields for AI eligibility matching:
+  name, ABN, jurisdiction, industry, indigenous ownership (boolean), turnover, trading duration, employee count, description
+- **Edit company** dialog (same form, pre-populated)
+- **Create user account** dialog linked to a company: email + temporary password
+  - Uses Supabase Auth admin API (service role key) when available
+  - Falls back to regular signUp if service role key not configured
+  - Creates both Auth user and Profile record in database
+- Summary cards showing total companies, total users, and active applications
+- Dropdown actions per company row: Edit Company, Add User
+
+### Feature 5: Application Pipeline (Admin)
+- Admin page at `/admin/pipeline` showing all grant applications
+- **Assign grant** dialog to add a grant to a company's pipeline (creates GrantApplication)
+  - Prevents duplicate assignments (unique constraint on [companyId, grantId])
+  - Validates company and grant exist before creating
+- **Status transitions** validated with forward-only movement:
+  - NOT_STARTED → RESEARCHING → DRAFTING → SUBMITTED → UNDER_REVIEW → APPROVED/REJECTED → CLOSED
+  - Can always move to CLOSED from any state
+  - Cannot go backwards (e.g. SUBMITTED → DRAFTING is blocked)
+  - Status dropdown only shows valid next statuses
+- **Status summary cards** — clickable cards showing count per status, acts as a filter
+- **Filtering** by status and company via URL search params
+- **Application notes** — edit via dialog with Save/Cancel
+- Each application row shows: grant name, jurisdiction, company, status badge, deadline, document checklist progress (X/Y), notes button, status change dropdown
+
+### Feature 6: User Dashboard
+- `/dashboard` page showing only the logged-in user's company applications
+- Each application card shows:
+  - Grant name, jurisdiction badge, status badge
+  - Amount
+  - Next process step (derived from grant's process steps based on status)
+  - Deadline
+  - Document checklist progress (X/Y with visual progress bar)
+- Summary cards: Total Applications, Active Applications, Approved
+- Dashboard shell with navigation: Dashboard, Settings (placeholder)
+- Account dropdown with sign out
+- Graceful handling when user has no linked company
+
+### Sprint 1 Fixes Applied
+- **Zod validation** added to ALL server actions (grants, companies, users, applications)
+- **Environment variable validation** — created `src/lib/env.ts` with Zod schema, replaced all `!` non-null assertions
+- **Accessibility** — added `sr-only` labels to action buttons, table header cells, and progress bars
+- **Admin navigation** expanded: Grants, Companies, Pipeline
+
+## New Dependencies
+- `zod` — Input validation for server actions and environment variables
+
+## Key Files Added/Modified
+- `src/lib/env.ts` — Environment variable validation
+- `src/lib/validation.ts` — Zod schemas and status transition logic
+- `src/lib/actions/companies.ts` — Company CRUD and user account creation
+- `src/lib/actions/applications.ts` — Application CRUD and status management
+- `src/app/(admin)/admin/companies/` — Companies admin page (4 files)
+- `src/app/(admin)/admin/pipeline/` — Pipeline admin page (3 files)
+- `src/app/(dashboard)/dashboard/page.tsx` — User dashboard (rebuilt)
+- `src/app/(dashboard)/dashboard/settings/page.tsx` — Settings placeholder
+- `src/components/dashboard-shell.tsx` — User navigation shell
+
+## Architecture Notes
+- Same patterns as Sprint 1: Server Components for data fetching, Client Components for interactivity
+- Server Actions with Zod validation and `requireAdmin()` guard
+- Status transition validation is centralised in `validation.ts`
+- User dashboard is scoped by `companyId` from the session — no RLS needed
+- Supabase admin client created separately for user management (service role key)
