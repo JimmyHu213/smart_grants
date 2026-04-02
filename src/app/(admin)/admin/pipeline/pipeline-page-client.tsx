@@ -39,8 +39,22 @@ import {
   FolderOpen,
   Brain,
   Eye,
+  X,
 } from "lucide-react";
 import Link from "next/link";
+
+const JURISDICTION_FILTER_OPTIONS = [
+  { value: "ALL", label: "All Jurisdictions" },
+  { value: "FEDERAL", label: "Federal" },
+  { value: "WA", label: "Western Australia" },
+  { value: "NT", label: "Northern Territory" },
+  { value: "QLD", label: "Queensland" },
+  { value: "NSW", label: "New South Wales" },
+  { value: "VIC", label: "Victoria" },
+  { value: "SA", label: "South Australia" },
+  { value: "TAS", label: "Tasmania" },
+  { value: "ACT", label: "ACT" },
+];
 import {
   updateApplicationStatus,
   updateApplicationNotes,
@@ -164,12 +178,14 @@ export function PipelinePageClient({
   grants,
   currentStatusFilter,
   currentCompanyFilter,
+  currentJurisdictionFilter,
 }: {
   applications: ApplicationWithRelations[];
   companies: CompanyOption[];
   grants: GrantOption[];
   currentStatusFilter: string;
   currentCompanyFilter: string;
+  currentJurisdictionFilter: string;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -291,7 +307,7 @@ export function PipelinePageClient({
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <Select
           value={currentStatusFilter}
           onValueChange={(val) => updateFilter("status", val)}
@@ -303,6 +319,22 @@ export function PipelinePageClient({
             {STATUS_FILTER_OPTIONS.map((s) => (
               <SelectItem key={s.value} value={s.value}>
                 {s.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={currentJurisdictionFilter}
+          onValueChange={(val) => updateFilter("jurisdiction", val)}
+        >
+          <SelectTrigger className="w-[200px]" aria-label="Filter by jurisdiction">
+            <SelectValue placeholder="Jurisdiction" />
+          </SelectTrigger>
+          <SelectContent>
+            {JURISDICTION_FILTER_OPTIONS.map((j) => (
+              <SelectItem key={j.value} value={j.value}>
+                {j.label}
               </SelectItem>
             ))}
           </SelectContent>
@@ -324,6 +356,20 @@ export function PipelinePageClient({
             ))}
           </SelectContent>
         </Select>
+
+        {(currentStatusFilter !== "ALL" ||
+          currentCompanyFilter !== "ALL" ||
+          currentJurisdictionFilter !== "ALL") && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.push("/admin/pipeline")}
+            className="gap-1.5"
+          >
+            <X className="h-3.5 w-3.5" />
+            Clear Filters
+          </Button>
+        )}
       </div>
 
       {/* Applications Table */}

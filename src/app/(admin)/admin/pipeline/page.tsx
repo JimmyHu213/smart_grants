@@ -1,10 +1,11 @@
 import { prisma } from "@/lib/db";
-import type { ApplicationStatus } from "@/generated/prisma/client";
+import type { ApplicationStatus, Prisma } from "@/generated/prisma/client";
 import { PipelinePageClient } from "./pipeline-page-client";
 
 type SearchParams = Promise<{
   status?: string;
   company?: string;
+  jurisdiction?: string;
 }>;
 
 const VALID_STATUSES = new Set([
@@ -18,6 +19,10 @@ const VALID_STATUSES = new Set([
   "CLOSED",
 ]);
 
+const VALID_JURISDICTIONS = new Set([
+  "FEDERAL", "WA", "NT", "QLD", "NSW", "VIC", "SA", "TAS", "ACT",
+]);
+
 export default async function AdminPipelinePage({
   searchParams,
 }: {
@@ -26,18 +31,21 @@ export default async function AdminPipelinePage({
   const params = await searchParams;
   const statusParam = params.status;
   const companyParam = params.company;
+  const jurisdictionParam = params.jurisdiction;
 
   // Build filter
-  const where: {
-    status?: ApplicationStatus;
-    companyId?: string;
-  } = {};
+  const where: Prisma.GrantApplicationWhereInput = {};
 
   if (statusParam && VALID_STATUSES.has(statusParam)) {
     where.status = statusParam as ApplicationStatus;
   }
   if (companyParam && companyParam !== "ALL") {
     where.companyId = companyParam;
+  }
+  if (jurisdictionParam && VALID_JURISDICTIONS.has(jurisdictionParam)) {
+    where.grant = {
+      jurisdiction: jurisdictionParam as "FEDERAL" | "WA" | "NT" | "QLD" | "NSW" | "VIC" | "SA" | "TAS" | "ACT",
+    };
   }
 
   // Fetch applications with all relations needed for pipeline + documents + eligibility
@@ -111,6 +119,7 @@ export default async function AdminPipelinePage({
       grants={grants}
       currentStatusFilter={statusParam ?? "ALL"}
       currentCompanyFilter={companyParam ?? "ALL"}
+      currentJurisdictionFilter={jurisdictionParam ?? "ALL"}
     />
   );
 }

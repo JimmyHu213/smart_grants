@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -36,7 +36,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, MoreHorizontal, Pencil, Trash2, ExternalLink, Star, Eye } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Plus, MoreHorizontal, Pencil, Trash2, ExternalLink, Star, Eye, Search, X } from "lucide-react";
 import Link from "next/link";
 import { deleteGrant } from "@/lib/actions/grants";
 import { GrantFormDialog } from "./grant-form-dialog";
@@ -136,10 +137,12 @@ export function GrantsPageClient({
   grants,
   currentJurisdiction,
   currentStatus,
+  currentSearch,
 }: {
   grants: GrantWithRelations[];
   currentJurisdiction: string;
   currentStatus: string;
+  currentSearch: string;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -149,6 +152,8 @@ export function GrantsPageClient({
     null
   );
   const [isDeleting, setIsDeleting] = useState(false);
+  const [searchValue, setSearchValue] = useState(currentSearch);
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function updateFilter(key: string, value: string | null) {
     const params = new URLSearchParams(searchParams.toString());
@@ -159,6 +164,26 @@ export function GrantsPageClient({
     }
     router.push(`/admin/grants?${params.toString()}`);
   }
+
+  function handleSearchChange(value: string) {
+    setSearchValue(value);
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    searchTimeoutRef.current = setTimeout(() => {
+      updateFilter("q", value || null);
+    }, 400);
+  }
+
+  function clearAllFilters() {
+    setSearchValue("");
+    router.push("/admin/grants");
+  }
+
+  const hasFilters =
+    currentJurisdiction !== "ALL" ||
+    currentStatus !== "ALL" ||
+    currentSearch.length > 0;
 
   async function handleDelete() {
     if (!deleteTarget) return;
@@ -193,12 +218,25 @@ export function GrantsPageClient({
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap items-center gap-3">
+        {/* Search input */}
+        <div className="relative w-full sm:w-[280px]">
+          <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+          <Input
+            type="search"
+            placeholder="Search grants..."
+            value={searchValue}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            className="pl-9"
+            aria-label="Search grants by name or description"
+          />
+        </div>
+
         <Select
           value={currentJurisdiction}
           onValueChange={(val) => updateFilter("jurisdiction", val)}
         >
-          <SelectTrigger className="w-[200px]">
+          <SelectTrigger className="w-[200px]" aria-label="Filter by jurisdiction">
             <SelectValue placeholder="Jurisdiction" />
           </SelectTrigger>
           <SelectContent>
@@ -214,7 +252,7 @@ export function GrantsPageClient({
           value={currentStatus}
           onValueChange={(val) => updateFilter("status", val)}
         >
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-[180px]" aria-label="Filter by status">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -225,6 +263,18 @@ export function GrantsPageClient({
             ))}
           </SelectContent>
         </Select>
+
+        {hasFilters && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={clearAllFilters}
+            className="gap-1.5"
+          >
+            <X className="h-3.5 w-3.5" />
+            Clear Filters
+          </Button>
+        )}
       </div>
 
       {/* Table */}

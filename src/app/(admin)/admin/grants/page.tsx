@@ -1,10 +1,11 @@
 import { prisma } from "@/lib/db";
-import type { Jurisdiction, GrantStatus } from "@/generated/prisma/client";
+import type { Jurisdiction, GrantStatus, Prisma } from "@/generated/prisma/client";
 import { GrantsPageClient } from "./grants-page-client";
 
 type SearchParams = Promise<{
   jurisdiction?: string;
   status?: string;
+  q?: string;
 }>;
 
 const VALID_JURISDICTIONS = new Set([
@@ -21,14 +22,24 @@ export default async function AdminGrantsPage({
   const params = await searchParams;
   const jurisdictionParam = params.jurisdiction;
   const statusParam = params.status;
+  const searchQuery = params.q?.trim() ?? "";
 
-  const where: { jurisdiction?: Jurisdiction; status?: GrantStatus } = {};
+  const where: Prisma.GrantWhereInput = {};
 
   if (jurisdictionParam && VALID_JURISDICTIONS.has(jurisdictionParam)) {
     where.jurisdiction = jurisdictionParam as Jurisdiction;
   }
   if (statusParam && VALID_STATUSES.has(statusParam)) {
     where.status = statusParam as GrantStatus;
+  }
+
+  // Text search across name and description
+  if (searchQuery) {
+    where.OR = [
+      { name: { contains: searchQuery, mode: "insensitive" } },
+      { description: { contains: searchQuery, mode: "insensitive" } },
+      { administeringBody: { contains: searchQuery, mode: "insensitive" } },
+    ];
   }
 
   const grants = await prisma.grant.findMany({
@@ -65,6 +76,7 @@ export default async function AdminGrantsPage({
       grants={serialisedGrants}
       currentJurisdiction={jurisdictionParam ?? "ALL"}
       currentStatus={statusParam ?? "ALL"}
+      currentSearch={searchQuery}
     />
   );
 }
