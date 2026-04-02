@@ -50,7 +50,7 @@ export function CompaniesPageClient({
         <div>
           <h2 className="text-2xl font-semibold tracking-tight">Companies</h2>
           <p className="text-sm text-muted-foreground">
-            {companies.length} company{companies.length !== 1 ? "ies" : "y"}{" "}
+            {companies.length} {companies.length !== 1 ? "companies" : "company"}{" "}
             registered
           </p>
         </div>

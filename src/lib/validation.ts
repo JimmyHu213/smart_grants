@@ -74,14 +74,14 @@ export const createUserSchema = z.object({
   email: z.string().email("Valid email address is required"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   fullName: z.string().max(200).optional().or(z.literal("")),
-  companyId: z.string().uuid("Invalid company ID"),
+  companyId: z.string().min(1, "Company ID is required"),
 });
 
 // ─── Application Schemas ──────────────────────────────
 
 export const createApplicationSchema = z.object({
-  companyId: z.string().uuid("Invalid company ID"),
-  grantId: z.string().uuid("Invalid grant ID"),
+  companyId: z.string().min(1, "Company ID is required"),
+  grantId: z.string().min(1, "Grant ID is required"),
   notes: z.string().max(10000).optional().or(z.literal("")),
 });
 
@@ -90,12 +90,12 @@ export const applicationStatusSchema = z.enum(APPLICATION_STATUSES, {
 });
 
 export const updateApplicationStatusSchema = z.object({
-  applicationId: z.string().uuid("Invalid application ID"),
+  applicationId: z.string().min(1, "Application ID is required"),
   status: applicationStatusSchema,
 });
 
 export const updateApplicationNotesSchema = z.object({
-  applicationId: z.string().uuid("Invalid application ID"),
+  applicationId: z.string().min(1, "Application ID is required"),
   notes: z.string().max(10000),
 });
 
@@ -138,4 +138,4 @@ export function getAllowedNextStatuses(currentStatus: string): string[] {
 
 // ─── ID Schema ────────────────────────────────────────
 
-export const idSchema = z.string().uuid("Invalid ID format");
+export const idSchema = z.string().min(1, "ID is required");
