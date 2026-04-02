@@ -12,9 +12,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { FileText, Building2, GitBranch, LogOut, User } from "lucide-react";
+import { LayoutDashboard, FileText, Building2, GitBranch, LogOut, User } from "lucide-react";
 
 const navItems = [
+  { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
   { label: "Grants", href: "/admin/grants", icon: FileText },
   { label: "Companies", href: "/admin/companies", icon: Building2 },
   { label: "Pipeline", href: "/admin/pipeline", icon: GitBranch },
@@ -33,7 +34,7 @@ export function AdminShell({
     <div className="min-h-screen">
       <header className="sticky top-0 z-40 border-b border-border bg-card/80 backdrop-blur-sm">
         <div className="mx-auto flex h-14 max-w-7xl items-center gap-6 px-4 sm:px-6">
-          <Link href="/admin/grants" className="text-lg font-semibold tracking-tight">
+          <Link href="/admin/dashboard" className="text-lg font-semibold tracking-tight">
             Smart Grants
           </Link>
 

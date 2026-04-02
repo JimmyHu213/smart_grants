@@ -9,7 +9,7 @@ export default async function HomePage() {
   }
 
   if (user.role === "ADMIN") {
-    redirect("/admin/grants");
+    redirect("/admin/dashboard");
   }
 
   redirect("/dashboard");
