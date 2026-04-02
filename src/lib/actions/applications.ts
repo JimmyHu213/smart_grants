@@ -124,7 +124,9 @@ export async function updateApplicationStatus(data: {
     });
 
     revalidatePath("/admin/pipeline");
+    revalidatePath(`/admin/pipeline/${validated.applicationId}`);
     revalidatePath("/dashboard");
+    revalidatePath(`/dashboard/applications/${validated.applicationId}`);
     return { success: true };
   } catch (error) {
     const message =
@@ -164,6 +166,7 @@ export async function updateApplicationNotes(data: {
     });
 
     revalidatePath("/admin/pipeline");
+    revalidatePath(`/admin/pipeline/${validated.applicationId}`);
     return { success: true };
   } catch (error) {
     const message =

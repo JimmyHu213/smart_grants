@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,6 +16,7 @@ import {
   Clock,
   ArrowRight,
   FolderOpen,
+  ChevronRight,
 } from "lucide-react";
 import { DocumentManager } from "@/components/document-manager";
 
@@ -85,9 +87,12 @@ export function DashboardApplicationCard({
             <div className="min-w-0 flex-1 space-y-2">
               <div className="flex items-start gap-3">
                 <div className="min-w-0 flex-1">
-                  <h4 className="font-semibold leading-snug">
+                  <Link
+                    href={`/dashboard/applications/${app.id}`}
+                    className="font-semibold leading-snug hover:text-primary hover:underline transition-colors"
+                  >
                     {app.grant.name}
-                  </h4>
+                  </Link>
                   <div className="mt-1 flex flex-wrap items-center gap-2">
                     <Badge variant="outline" className="text-xs">
                       {app.grant.jurisdiction}
