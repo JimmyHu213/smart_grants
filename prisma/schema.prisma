@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -10,4 +5,168 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+// ─── Enums ─────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum Jurisdiction {
+  FEDERAL
+  WA
+  NT
+  QLD
+  NSW
+  VIC
+  SA
+  TAS
+  ACT
+}
+
+enum GrantStatus {
+  OPEN
+  CLOSED
+  MONITORING
+}
+
+enum ApplicationStatus {
+  NOT_STARTED
+  RESEARCHING
+  DRAFTING
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  CLOSED
+}
+
+// ─── Models ────────────────────────────────────────────
+
+model Profile {
+  id        String   @id @default(uuid())
+  authId    String   @unique // References Supabase auth.users.id
+  email     String   @unique
+  fullName  String?
+  phone     String?
+  role      Role     @default(USER)
+  company   Company? @relation(fields: [companyId], references: [id])
+  companyId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  documents Document[]
+
+  @@index([companyId])
+  @@map("profiles")
+}
+
+model Company {
+  id                 String   @id @default(uuid())
+  name               String
+  abn                String?  @unique // Australian Business Number
+  jurisdiction       String?  // State/territory of operation
+  industry           String?
+  indigenousOwnership Boolean @default(false)
+  turnover           String?  // Free text, e.g. "$500,000 - $1M"
+  tradingDuration    String?  // Free text, e.g. "3 years"
+  employeeCount      Int?
+  description        String?  @db.Text
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  profiles     Profile[]
+  applications GrantApplication[]
+
+  @@map("companies")
+}
+
+model Grant {
+  id                String       @id @default(uuid())
+  name              String
+  jurisdiction      Jurisdiction
+  administeringBody String
+  amount            String       // Free text, e.g. "Up to $5,000,000"
+  status            GrantStatus  @default(OPEN)
+  deadline          String?      // Free text — some are "Ongoing", some have dates
+  externalLink      String?
+  relevanceRating   Int?         // 1-5 stars
+  description       String       @db.Text
+  eligibilityCriteria String?    @db.Text
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  checklistItems GrantChecklistItem[]
+  processSteps   GrantProcessStep[]
+  applications   GrantApplication[]
+
+  @@index([jurisdiction])
+  @@index([status])
+  @@map("grants")
+}
+
+model GrantChecklistItem {
+  id        String @id @default(uuid())
+  grant     Grant  @relation(fields: [grantId], references: [id], onDelete: Cascade)
+  grantId   String
+  label     String
+  sortOrder Int
+
+  documents Document[]
+
+  @@index([grantId])
+  @@map("grant_checklist_items")
+}
+
+model GrantProcessStep {
+  id        String @id @default(uuid())
+  grant     Grant  @relation(fields: [grantId], references: [id], onDelete: Cascade)
+  grantId   String
+  label     String
+  sortOrder Int
+
+  @@index([grantId])
+  @@map("grant_process_steps")
+}
+
+model GrantApplication {
+  id                String            @id @default(uuid())
+  company           Company           @relation(fields: [companyId], references: [id])
+  companyId         String
+  grant             Grant             @relation(fields: [grantId], references: [id])
+  grantId           String
+  status            ApplicationStatus @default(NOT_STARTED)
+  notes             String?           @db.Text
+  eligibilityResult Json?             // Stored AI eligibility assessment
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  documents Document[]
+
+  @@unique([companyId, grantId])
+  @@index([companyId])
+  @@index([grantId])
+  @@index([status])
+  @@map("grant_applications")
+}
+
+model Document {
+  id              String              @id @default(uuid())
+  application     GrantApplication    @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  applicationId   String
+  checklistItem   GrantChecklistItem? @relation(fields: [checklistItemId], references: [id])
+  checklistItemId String?
+  fileName        String
+  fileUrl         String              // Supabase Storage path
+  fileSize        Int?
+  mimeType        String?
+  uploadedBy      Profile             @relation(fields: [uploadedById], references: [id])
+  uploadedById    String
+  createdAt       DateTime            @default(now())
+
+  @@index([applicationId])
+  @@index([checklistItemId])
+  @@map("documents")
 }
