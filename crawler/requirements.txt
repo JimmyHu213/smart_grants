@@ -1,0 +1,8 @@
+fastapi[standard]>=0.115.0
+crawl4ai>=0.6.0
+pydantic>=2.0.0
+uvicorn>=0.30.0
+pytest>=8.0.0
+httpx>=0.27.0
+anyio>=4.0.0
+pytest-anyio>=0.0.0
