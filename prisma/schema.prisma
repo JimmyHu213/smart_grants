@@ -43,6 +43,17 @@ enum ApplicationStatus {
   CLOSED
 }
 
+enum GrantSource {
+  MANUAL
+  CRAWLED
+}
+
+enum ReviewStatus {
+  APPROVED
+  PENDING_REVIEW
+  REJECTED
+}
+
 // ─── Models ────────────────────────────────────────────
 
 model Profile {
@@ -94,9 +105,13 @@ model Grant {
   externalLink      String?
   relevanceRating   Int?         // 1-5 stars
   description       String       @db.Text
-  eligibilityCriteria String?    @db.Text
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
+  eligibilityCriteria String?      @db.Text
+  source            GrantSource    @default(MANUAL)
+  reviewStatus      ReviewStatus   @default(APPROVED)
+  sourceUrl         String?        @unique
+  crawledAt         DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
 
   checklistItems GrantChecklistItem[]
   processSteps   GrantProcessStep[]
@@ -104,6 +119,7 @@ model Grant {
 
   @@index([jurisdiction])
   @@index([status])
+  @@index([reviewStatus])
   @@map("grants")
 }
 
