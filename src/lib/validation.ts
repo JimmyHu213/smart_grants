@@ -204,6 +204,42 @@ export const resetPasswordSchema = z
     path: ["confirmPassword"],
   });
 
+// ─── Crawler Schemas ─────────────────────────────────
+
+export const crawledGrantSchema = z.object({
+  name: z.string().min(1, "Grant name is required").max(500),
+  jurisdiction: z.enum(JURISDICTIONS, { message: "Invalid jurisdiction" }),
+  administeringBody: z.string().min(1, "Administering body is required").max(500),
+  amount: z.string().min(1, "Amount is required").max(200),
+  status: z.enum(GRANT_STATUSES, { message: "Invalid status" }),
+  deadline: z.string().max(200).default(""),
+  externalLink: z.string().max(1000).default(""),
+  sourceUrl: z.string().min(1, "Source URL is required").max(2000),
+  description: z.string().min(1, "Description is required"),
+  eligibilityCriteria: z.string().default(""),
+  checklistItems: z.array(checklistItemSchema).default([]),
+  processSteps: z.array(processStepSchema).default([]),
+});
+
+export type CrawledGrant = z.infer<typeof crawledGrantSchema>;
+
+export const crawlerResponseSchema = z.object({
+  grants: z.array(crawledGrantSchema),
+  errors: z.array(z.string()),
+});
+
+export type CrawlerResponse = z.infer<typeof crawlerResponseSchema>;
+
+export const reviewActionSchema = z.object({
+  grantId: z.string().min(1, "Grant ID is required"),
+  action: z.enum(["approve", "reject"], { message: "Action must be approve or reject" }),
+});
+
+export const bulkReviewActionSchema = z.object({
+  grantIds: z.array(z.string().min(1)).min(1, "At least one grant ID is required"),
+  action: z.enum(["approve", "reject"], { message: "Action must be approve or reject" }),
+});
+
 // ─── ID Schema ────────────────────────────────────────
 
 export const idSchema = z.string().min(1, "ID is required");
