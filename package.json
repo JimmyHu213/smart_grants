@@ -10,6 +10,7 @@
     "db:migrate": "npx prisma migrate dev",
     "db:seed": "npx prisma db seed",
     "db:studio": "npx prisma studio",
+    "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:run": "vitest run"
   },
