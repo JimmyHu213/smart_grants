@@ -20,12 +20,13 @@ import {
   SheetClose,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, FileText, Building2, Users, GitBranch, LogOut, User, Menu } from "lucide-react";
+import { LayoutDashboard, FileText, Building2, Users, GitBranch, LogOut, User, Menu, Search } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 const navItems = [
   { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
   { label: "Grants", href: "/admin/grants", icon: FileText },
+  { label: "Crawl", href: "/admin/grants/crawl", icon: Search },
   { label: "Companies", href: "/admin/companies", icon: Building2 },
   { label: "Users", href: "/admin/users", icon: Users },
   { label: "Pipeline", href: "/admin/pipeline", icon: GitBranch },
