@@ -24,7 +24,9 @@ export default async function AdminGrantsPage({
   const statusParam = params.status;
   const searchQuery = params.q?.trim() ?? "";
 
-  const where: Prisma.GrantWhereInput = {};
+  const where: Prisma.GrantWhereInput = {
+    reviewStatus: "APPROVED",
+  };
 
   if (jurisdictionParam && VALID_JURISDICTIONS.has(jurisdictionParam)) {
     where.jurisdiction = jurisdictionParam as Jurisdiction;
@@ -52,6 +54,10 @@ export default async function AdminGrantsPage({
     orderBy: [{ jurisdiction: "asc" }, { name: "asc" }],
   });
 
+  const pendingCount = await prisma.grant.count({
+    where: { reviewStatus: "PENDING_REVIEW" },
+  });
+
   // Serialise dates for client component
   const serialisedGrants = grants.map((grant) => ({
     ...grant,
@@ -77,6 +83,7 @@ export default async function AdminGrantsPage({
       currentJurisdiction={jurisdictionParam ?? "ALL"}
       currentStatus={statusParam ?? "ALL"}
       currentSearch={searchQuery}
+      pendingCount={pendingCount}
     />
   );
 }
