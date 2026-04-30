@@ -138,11 +138,13 @@ export function GrantsPageClient({
   currentJurisdiction,
   currentStatus,
   currentSearch,
+  pendingCount,
 }: {
   grants: GrantWithRelations[];
   currentJurisdiction: string;
   currentStatus: string;
   currentSearch: string;
+  pendingCount: number;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -211,10 +213,19 @@ export function GrantsPageClient({
             {grants.length} grant{grants.length !== 1 ? "s" : ""} found
           </p>
         </div>
-        <Button onClick={() => setCreateOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          New Grant
-        </Button>
+        <div className="flex items-center gap-3">
+          {pendingCount > 0 && (
+            <Link href="/admin/grants/review">
+              <Badge variant="secondary" className="gap-1 cursor-pointer">
+                {pendingCount} pending review
+              </Badge>
+            </Link>
+          )}
+          <Button onClick={() => setCreateOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            New Grant
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
