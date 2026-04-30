@@ -482,9 +482,9 @@ describe("eligibilitySchema", () => {
   });
 
   it("accepts all valid criterion status values", () => {
-    for (const status of ["qualified", "partial", "not_qualified"]) {
+    for (const status of ["qualified", "partial", "not_qualified"] as const) {
       const data = validEligibility();
-      data.criteria[0].status = status as "qualified" | "partial" | "not_qualified";
+      (data.criteria[0] as Record<string, unknown>).status = status;
       const result = eligibilitySchema.safeParse(data);
       expect(result.success).toBe(true);
     }
