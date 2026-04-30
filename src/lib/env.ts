@@ -16,6 +16,10 @@ const envSchema = z.object({
   // AI
   ANTHROPIC_API_KEY: z.string().min(1, "ANTHROPIC_API_KEY is required").optional(),
 
+  // Crawler
+  CRAWLER_SERVICE_URL: z.string().url("CRAWLER_SERVICE_URL must be a valid URL").optional(),
+  CRAWLER_API_KEY: z.string().min(1, "CRAWLER_API_KEY is required").optional(),
+
   // Node
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
 });
