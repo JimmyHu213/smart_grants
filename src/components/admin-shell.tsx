@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { LayoutDashboard, FileText, Building2, Users, GitBranch, LogOut, User, Menu } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const navItems = [
   { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
@@ -81,7 +82,8 @@ export function AdminShell({
             })}
           </nav>
 
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-1">
+            <ThemeToggle />
             <DropdownMenu>
               <DropdownMenuTrigger
                 render={<Button variant="ghost" size="sm" className="gap-2" aria-label={`Account menu for ${user.email}`} />}
