@@ -8,7 +8,7 @@ from app.config import REQUEST_DELAY
 import asyncio
 import json
 
-GRANT_CONNECT_URL = "https://www.grants.gov.au/search"
+GRANT_CONNECT_URL = "https://help.grants.gov.au/getting-started-with-grantconnect/information-made-easy/current-opportunities/"
 
 EXTRACTION_PROMPT = """Extract all grant programs from this page. For each grant, extract:
 - name: The official grant program name
@@ -34,7 +34,7 @@ class GrantConnectAdapter(BaseAdapter):
         config = CrawlerRunConfig(
             cache_mode=CacheMode.BYPASS,
             extraction_strategy=LLMExtractionStrategy(
-                llm_config=LLMConfig(provider="gemini/gemini-2.0-flash"),
+                llm_config=LLMConfig(provider="anthropic/claude-haiku-4-5-20251001"),
                 instruction=EXTRACTION_PROMPT,
             ),
         )

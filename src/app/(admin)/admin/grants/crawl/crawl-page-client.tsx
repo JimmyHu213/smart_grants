@@ -129,6 +129,11 @@ export function CrawlPageClient() {
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {isLoading ? "Crawling..." : "Start Crawl"}
           </Button>
+          {isLoading && (
+            <p className="text-sm text-muted-foreground">
+              This may take a few minutes. Please do not close this page.
+            </p>
+          )}
         </CardContent>
       </Card>
 
