@@ -1,4 +1,4 @@
-from crawl4ai import AsyncWebCrawler, CrawlerRunConfig, CacheMode
+from crawl4ai import AsyncWebCrawler, CrawlerRunConfig, CacheMode, LLMConfig
 from crawl4ai.extraction_strategy import LLMExtractionStrategy
 
 from app.adapters.base import BaseAdapter
@@ -34,7 +34,7 @@ class BusinessGovAdapter(BaseAdapter):
         config = CrawlerRunConfig(
             cache_mode=CacheMode.BYPASS,
             extraction_strategy=LLMExtractionStrategy(
-                provider="openai/gpt-4o-mini",
+                llm_config=LLMConfig(provider="gemini/gemini-2.0-flash"),
                 instruction=EXTRACTION_PROMPT,
             ),
         )
