@@ -34,7 +34,7 @@ class BusinessGovAdapter(BaseAdapter):
         config = CrawlerRunConfig(
             cache_mode=CacheMode.BYPASS,
             extraction_strategy=LLMExtractionStrategy(
-                llm_config=LLMConfig(provider="gemini/gemini-2.0-flash"),
+                llm_config=LLMConfig(provider="anthropic/claude-haiku-4-5-20251001"),
                 instruction=EXTRACTION_PROMPT,
             ),
         )
