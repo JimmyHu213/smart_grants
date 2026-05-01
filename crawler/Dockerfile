@@ -11,13 +11,13 @@ ENV CHROMEDRIVER_PATH=/usr/bin/chromedriver
 
 WORKDIR /app
 
-COPY crawler/requirements.txt .
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Install Crawl4AI browser dependencies
 RUN crawl4ai-setup
 
-COPY crawler/app/ ./app/
+COPY app/ ./app/
 
 EXPOSE 8000
 
