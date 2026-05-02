@@ -14,8 +14,10 @@ export type ImportSummary = {
   errors: string[];
 };
 
-const SYSTEM_PROMPT = `You are a data extraction assistant. You will receive raw spreadsheet data about Australian grants.
-Extract each grant and return a JSON array of objects with these exact fields:
+const SYSTEM_PROMPT = `You are a data extraction assistant for an Australian grants management system.
+You will receive raw spreadsheet data (CSV format) about Australian grants. The columns may use different names — match them intelligently.
+
+Return a JSON array of grant objects with these exact fields:
 
 - name (string, required): Official grant program name
 - jurisdiction (string, required): One of FEDERAL, WA, NT, QLD, NSW, VIC, SA, TAS, ACT
@@ -24,18 +26,42 @@ Extract each grant and return a JSON array of objects with these exact fields:
 - status (string, required): One of OPEN, CLOSED, MONITORING
 - deadline (string): Application deadline as text, or empty string
 - externalLink (string): URL to grant info page, or empty string
-- sourceUrl (string, required): A unique identifier URL for this grant (use the externalLink if available, otherwise construct one from the grant name)
+- sourceUrl (string, required): A unique identifier URL for this grant (use the externalLink if available, otherwise construct one like "https://grants.gov.au/<slugified-grant-name>")
 - description (string, required): 2-4 sentence summary of the grant
 - eligibilityCriteria (string): Who is eligible, or empty string
 - checklistItems (array): Required documents, each with "label" (string) and "sortOrder" (number, 1-indexed). Empty array if unknown.
 - processSteps (array): Application steps, each with "label" (string) and "sortOrder" (number, 1-indexed). Empty array if unknown.
 
-Rules:
-- Return ONLY a valid JSON array, no markdown, no explanation
-- Every grant must have name, jurisdiction, administeringBody, amount, status, sourceUrl, and description
-- If jurisdiction is unclear, use FEDERAL
+Column matching — map these common column names:
+- "Grant Name", "Program Name", "Program", "Title" → name
+- "State", "State/Territory", "Region", "Jurisdiction" → jurisdiction
+- "Department", "Agency", "Organisation", "Administering Body" → administeringBody
+- "Funding", "Amount", "Value", "Grant Amount" → amount
+- "Status", "Open/Closed", "Availability" → status
+- "Due Date", "Close Date", "Deadline", "Closing Date" → deadline
+- "Website", "URL", "Link", "More Info" → externalLink
+- "Summary", "Description", "Overview", "About" → description
+- "Eligibility", "Who Can Apply", "Criteria", "Requirements" → eligibilityCriteria
+- "Documents", "Required Documents", "Checklist" → checklistItems
+- "Process", "Steps", "How to Apply" → processSteps
+
+Jurisdiction mapping:
+- "Federal", "Commonwealth", "National", "Australia-wide" → FEDERAL
+- "Western Australia" → WA, "Northern Territory" → NT, "Queensland" → QLD
+- "New South Wales" → NSW, "Victoria" → VIC, "South Australia" → SA
+- "Tasmania" → TAS, "Australian Capital Territory" → ACT
+
+Deduplication:
+- If the same grant appears multiple times (same name or very similar name), keep only one entry
+- Merge information from duplicate rows if they have complementary data
+
+Data quality:
+- Clean up inconsistent formatting (e.g. "$50000" → "$50,000")
+- Remove incomplete rows that lack both a name and description
 - If status is unclear, use MONITORING
-- If a field is missing, use empty string for text fields and empty arrays for lists`;
+- If jurisdiction is unclear, use FEDERAL
+
+Return ONLY a valid JSON array. No markdown, no explanation, no wrapping.`;
 
 export async function importGrantsFromExcel(
   formData: FormData
