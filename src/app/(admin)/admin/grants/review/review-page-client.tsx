@@ -21,7 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { CheckCircle2, XCircle, Eye, Loader2 } from "lucide-react";
+import { CheckCircle2, XCircle, Eye, Loader2, ExternalLink } from "lucide-react";
 import { reviewGrant, bulkReviewGrants } from "@/lib/actions/review";
 
 type PendingGrant = {
@@ -166,7 +166,20 @@ export function ReviewPageClient({ grants }: { grants: PendingGrant[] }) {
                   </TableCell>
                   <TableCell>
                     <div>
-                      <p className="font-medium">{grant.name}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium">{grant.name}</p>
+                        {grant.externalLink && (
+                          <a
+                            href={grant.externalLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-muted-foreground hover:text-primary"
+                            aria-label="Open grant website"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </a>
+                        )}
+                      </div>
                       <p className="text-xs text-muted-foreground">
                         {grant.administeringBody}
                       </p>
